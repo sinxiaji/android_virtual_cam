@@ -77,10 +77,18 @@ public class HookMain implements IXposedHookLoadPackage {
 
     public static String video_path = "/storage/emulated/0/DCIM/Camera1/";
 
+    public static String fileUrl = "/storage/emulated/0/DCIM/Camera1/virtual.mp4";
+
+    public static String decodeUrl = "/storage/emulated/0/DCIM/Camera1/virtual.live.mp4";
+
+    public static String liveUrl = "/storage/emulated/0/DCIM/Camera1/virtual.live.mp4";
+
     public static Surface c2_preview_Surfcae;
     public static Surface c2_preview_Surfcae_1;
+
     public static Surface c2_reader_Surfcae;
     public static Surface c2_reader_Surfcae_1;
+
     public static MediaPlayer c2_player;
     public static MediaPlayer c2_player_1;
     public static Surface c2_virtual_surface;
@@ -96,7 +104,7 @@ public class HookMain implements IXposedHookLoadPackage {
     public Context toast_content;
 
     public void handleLoadPackage(final XC_LoadPackage.LoadPackageParam lpparam) throws Exception {
-        File file = new File(video_path + "virtual.mp4");
+        File file = new File(fileUrl);
         if (file.exists()) {
             Class cameraclass = XposedHelpers.findClass("android.hardware.Camera", lpparam.classLoader);
             XposedHelpers.findAndHookMethod(cameraclass, "setPreviewTexture", SurfaceTexture.class, new XC_MethodHook() {
@@ -161,7 +169,7 @@ public class HookMain implements IXposedHookLoadPackage {
                 if (control_file.exists()) {
                     return;
                 }
-                File file = new File(video_path + "virtual.mp4");
+                File file = new File(fileUrl);
                 if (!file.exists()) {
                     if (toast_content != null) {
                         try {
@@ -194,7 +202,7 @@ public class HookMain implements IXposedHookLoadPackage {
                     if (control_file.exists()) {
                         return;
                     }
-                    File file = new File(video_path + "virtual.mp4");
+                    File file = new File(fileUrl);
                     if (!file.exists()) {
                         if (toast_content != null) {
                             try {
@@ -350,7 +358,7 @@ public class HookMain implements IXposedHookLoadPackage {
         XposedHelpers.findAndHookMethod("android.hardware.Camera", lpparam.classLoader, "startPreview", new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-                File file = new File(video_path + "virtual.mp4");
+                File file = new File(fileUrl);
                 if (!file.exists()) {
                     if (toast_content != null) {
                         try {
@@ -398,8 +406,8 @@ public class HookMain implements IXposedHookLoadPackage {
                     });
 
                     try {
-                        mplayer1.setDataSource(video_path + "virtual.mp4");
-                        mplayer1.prepare();
+                        mplayer1.setDataSource(liveUrl);
+                        mplayer1.prepareAsync();
                     } catch (IOException e) {
                         XposedBridge.log("【VCAM】" + e.toString());
                     }
@@ -440,8 +448,8 @@ public class HookMain implements IXposedHookLoadPackage {
                     });
 
                     try {
-                        mMedia.setDataSource(video_path + "virtual.mp4");
-                        mMedia.prepare();
+                        mMedia.setDataSource(liveUrl);
+                        mMedia.prepareAsync();
                     } catch (IOException e) {
                         XposedBridge.log("【VCAM】" + e.toString());
                     }
@@ -453,7 +461,7 @@ public class HookMain implements IXposedHookLoadPackage {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
                 XposedBridge.log("【VCAM】添加Surfaceview预览");
-                File file = new File(video_path + "virtual.mp4");
+                File file = new File(fileUrl);
                 if (!file.exists()) {
                     if (toast_content != null) {
                         try {
@@ -501,7 +509,7 @@ public class HookMain implements IXposedHookLoadPackage {
                 if (param.thisObject == null) {
                     return;
                 }
-                File file = new File(video_path + "virtual.mp4");
+                File file = new File(fileUrl);
                 if (!file.exists()) {
                     if (toast_content != null) {
                         try {
@@ -550,7 +558,7 @@ public class HookMain implements IXposedHookLoadPackage {
                 if (param.thisObject == null) {
                     return;
                 }
-                File file = new File(video_path + "virtual.mp4");
+                File file = new File(fileUrl);
                 if (!file.exists()) {
                     if (toast_content != null) {
                         try {
@@ -593,7 +601,7 @@ public class HookMain implements IXposedHookLoadPackage {
                     return;
                 }
                 c2_builder = (CaptureRequest.Builder) param.thisObject;
-                File file = new File(video_path + "virtual.mp4");
+                File file = new File(fileUrl);
                 if (!file.exists()) {
                     if (toast_content != null) {
                         try {
@@ -614,7 +622,7 @@ public class HookMain implements IXposedHookLoadPackage {
             }
         });
 
-/*        XposedHelpers.findAndHookMethod("android.hardware.Camera", lpparam.classLoader, "stopPreview", new XC_MethodHook() {
+        XposedHelpers.findAndHookMethod("android.hardware.Camera", lpparam.classLoader, "stopPreview", new XC_MethodHook() {
             @Override
             protected void beforeHookedMethod(MethodHookParam param) {
                 if (param.thisObject.equals(HookMain.reallycamera) || param.thisObject.equals(HookMain.data_camera) || param.thisObject.equals(HookMain.mcamera1)) {
@@ -634,7 +642,7 @@ public class HookMain implements IXposedHookLoadPackage {
                     XposedBridge.log("停止预览");
                 }
             }
-        });*/
+        });
 
         XposedHelpers.findAndHookMethod("android.media.ImageReader", lpparam.classLoader, "newInstance", int.class, int.class, int.class, int.class, new XC_MethodHook() {
             @Override
@@ -680,7 +688,7 @@ public class HookMain implements IXposedHookLoadPackage {
                     c2_hw_decode_obj.setSaveFrames("null", OutputImageFormat.NV21);
                 }
                 c2_hw_decode_obj.set_surfcae(c2_reader_Surfcae);
-                c2_hw_decode_obj.decode(video_path + "virtual.mp4");
+                c2_hw_decode_obj.decode(decodeUrl);
             } catch (Throwable throwable) {
                 XposedBridge.log("【VCAM】" + throwable.toString());
             }
@@ -700,7 +708,7 @@ public class HookMain implements IXposedHookLoadPackage {
                     c2_hw_decode_obj_1.setSaveFrames("null", OutputImageFormat.NV21);
                 }
                 c2_hw_decode_obj_1.set_surfcae(c2_reader_Surfcae_1);
-                c2_hw_decode_obj_1.decode(video_path + "virtual.mp4");
+                c2_hw_decode_obj_1.decode(decodeUrl);
             } catch (Throwable throwable) {
                 XposedBridge.log("【VCAM】" + throwable.toString());
             }
@@ -727,7 +735,7 @@ public class HookMain implements IXposedHookLoadPackage {
                         c2_player.start();
                     }
                 });
-                c2_player.setDataSource(video_path + "virtual.mp4");
+                c2_player.setDataSource(liveUrl);
                 c2_player.prepare();
             } catch (Exception e) {
                 XposedBridge.log("【VCAM】[c2player][" + c2_preview_Surfcae.toString() + "]" + e.toString());
@@ -754,8 +762,8 @@ public class HookMain implements IXposedHookLoadPackage {
                         c2_player_1.start();
                     }
                 });
-                c2_player_1.setDataSource(video_path + "virtual.mp4");
-                c2_player_1.prepare();
+                c2_player_1.setDataSource(liveUrl);
+                c2_player_1.prepareAsync();
             } catch (Exception e) {
                 XposedBridge.log("【VCAM】[c2player1]" + "[ " + c2_preview_Surfcae_1.toString() + "]" + e.toString());
             }
@@ -853,7 +861,7 @@ public class HookMain implements IXposedHookLoadPackage {
                     }
                 });
 
-/*                XposedHelpers.findAndHookMethod(param.args[0].getClass(), "close", new XC_MethodHook() {
+               XposedHelpers.findAndHookMethod(param.args[0].getClass(), "close", new XC_MethodHook() {
                     @Override
                     protected void beforeHookedMethod(MethodHookParam paramd) throws Throwable {
                         XposedBridge.log("C2终止预览");
@@ -880,7 +888,7 @@ public class HookMain implements IXposedHookLoadPackage {
                         need_recreate = true;
                         is_first_hook_build= true;
                     }
-                });*/
+                });
 
             }
 
@@ -990,7 +998,7 @@ public class HookMain implements IXposedHookLoadPackage {
         if (control_file.exists()) {
             need_stop = 1;
         }
-        File file = new File(video_path + "virtual.mp4");
+        File file = new File(fileUrl);
         if (!file.exists()) {
             if (toast_content != null) {
                 try {
@@ -1032,7 +1040,7 @@ public class HookMain implements IXposedHookLoadPackage {
                     }
                     hw_decode_obj = new VideoToFrames();
                     hw_decode_obj.setSaveFrames("", OutputImageFormat.NV21);
-                    hw_decode_obj.decode(video_path + "virtual.mp4");
+                    hw_decode_obj.decode(decodeUrl);
                     while (data_buffer == null) {
                     }
                     System.arraycopy(data_buffer, 0, paramd.args[0], 0, Math.min(data_buffer.length, ((byte[]) paramd.args[0]).length));
