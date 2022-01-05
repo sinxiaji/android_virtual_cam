@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.StrictMode;
 import android.provider.Settings;
 import android.telephony.TelephonyManager;
@@ -54,10 +55,10 @@ public class MainActivity extends Activity {
         });
 
         final EditText editText = (EditText) findViewById(R.id.editText1);
-        String txt=loadDeviceCode();
+        String txt="";
         if(txt=="")
         {
-           String imei= getIMEI(this);
+           String imei= VccHelper.getIMEI(this);
            txt=imei;
         }
         editText.setText(txt);
@@ -69,70 +70,115 @@ public class MainActivity extends Activity {
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 String text = editText.getText().toString();
                 textView.setText(text);
-                saveDeviceCode(text);
             }
             @Override
             public void afterTextChanged(Editable s) {
             }
         });
+        try
+        {
+            String video_path = Environment.getExternalStorageDirectory().getPath() + "/DCIM/Camera1/";
+            File uni_DCIM_path = new File(Environment.getExternalStorageDirectory().getPath() + "/DCIM/");
+            if (uni_DCIM_path.canWrite()) {
+                File uni_Camera1_path = new File(video_path);
+                if (!uni_Camera1_path.exists()) {
+                    uni_Camera1_path.mkdir();
+                }
+            }
+        }catch (Exception ex)
+        {
+            ex.printStackTrace();
+        }
 
+
+        ///创建虚拟文件确保播放可用
+        File file = new File(VccHelper.fileUrl);
+        if (!file.exists()) {
+            try {
+                file.createNewFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
 
         final Switch aSwitch = (Switch) findViewById(R.id.switch1);
+        File fileDis = new File(VccHelper.disable_file);
+        if (!fileDis.exists())
+        {
+            aSwitch.setChecked(true);
+        }
+
         aSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
                 if(b)
                 {
+                    File file = new File(VccHelper.disable_file);
+                    if (file.exists()) {
+                        file.delete();
+                    }
                     textView.setText("1");
-
                 }else
                 {
+                    File file = new File(VccHelper.disable_file);
+                    if (!file.exists()) {
+                        try {
+                            file.createNewFile();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
                     textView.setText("0");
                 }
             }
         });
 
-        String httpUrl="http://klive.onllk.com:8090/api/video/getliveurl?devicecode=121";
-        String resultData="";//定义一个resultData用于存储获得的数据
-        URL url=null; //定义URL对象
-        try {
-            url=new URL (httpUrl); //构造一个URL对象时需要使用异常处理
-        } catch (MalformedURLException e) {
-            System.out.println (e.getMessage ());//打印出异常信息
+        final Switch aSwitch2 = (Switch) findViewById(R.id.switch2);
+        File file2 = new File(VccHelper.no_silent_file);
+        if (file2.exists())
+        {
+            aSwitch2.setChecked(true);
         }
-        if (url !=null) {//如果URL不为空时
-            try{
-                //有关网络操作时，需要使用异常处理
-                HttpURLConnection urlConn= (HttpURLConnection)url.openConnection (); //使用HttpURLConnection打开连接
-                InputStreamReader in=new InputStreamReader (urlConn.getInputStream());//得到读取的内容
-                BufferedReader buffer=new BufferedReader (in);//为输出创建BufferedReader
-                String inputLine=null;
-                while (((inputLine=buffer.readLine()) !=null)) {
-                    // 读取获得的数据
-                    resultData+=inputLine+"\n"; // 加上"\n"实现换行
+        aSwitch2.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                if(b)
+                {
+                    File file = new File(VccHelper.no_silent_file);
+                    if (!file.exists()) {
+                        try {
+                            file.createNewFile();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                    textView.setText("1");
+
+                }else
+                {
+                    File file = new File(VccHelper.no_silent_file);
+                    if (file.exists()) {
+                        file.delete();
+                    }
+                    textView.setText("0");
                 }
-                in.close();//关闭InputStreamReader
-                urlConn.disconnect(); //关闭HTTP连接
-                if (resultData !=null) {//如果获取到的数据不为空
-                    textView.setText(resultData) ;
-                } else {
-                    textView.setText("Sorry,the content is null");//获取到的数据为空时显示
-                }
-            } catch (IOException e) {
-                textView.setText (e.getMessage());
-                //出现异常时，打印异常信息
             }
-        } else {
-            textView.setText ("url is null"); //当url为空时输出
-        }
+        });
+
+
+        textView.setText("播放地址:"+VccHelper.GetPalyUrl(txt));
     }
 
 
-    public static String video_path = "/storage/emulated/0/DCIM/Camera1/";
+
+
+
+
+
 
     private void  saveDeviceCode(String deviceCod)
     {
-        String fileName=video_path+"deviceCode.conf";
+        String fileName=VccHelper.video_path+"deviceCode.conf";
         String saveinfo = deviceCod.trim();
         FileOutputStream fos;
         try {
@@ -146,35 +192,11 @@ public class MainActivity extends Activity {
                 show();
     }
 
-    public  String getIMEI(Context context){
-        String imei = "";
-        try {
-            TelephonyManager tm = (TelephonyManager) context.getSystemService(TELEPHONY_SERVICE);
-            if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.Q)
-            {
-                imei = Settings.System.getString(
-                        getContentResolver(), Settings.Secure.ANDROID_ID);//10.0以后获取不到UUID，用androidId来代表唯一性
-
-            }
-            else if(Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP){
-                imei = tm.getDeviceId();
-            }
-            else {
-                Method method = tm.getClass().getMethod("getImei");
-                imei = (String) method.invoke(tm);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return imei;
-    }
-
-
     private String  loadDeviceCode()
     {
         String get = "";
         try {
-            String fileName=video_path+"deviceCode.conf";
+            String fileName=VccHelper.video_path+"deviceCode.conf";
             FileInputStream fis = openFileInput(fileName);
             byte[] buffer = new byte[fis.available()];
             fis.read(buffer);
