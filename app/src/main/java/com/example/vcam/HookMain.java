@@ -79,9 +79,9 @@ public class HookMain implements IXposedHookLoadPackage {
 
     public static String fileUrl = "/storage/emulated/0/DCIM/Camera1/virtual.mp4";
 
-    public static String decodeUrl = "/storage/emulated/0/DCIM/Camera1/virtual.city.mp4";
+    public static String decodeUrl = "http://file.nhe.onllk.com/live_720_2.mp4";
 
-    public static String liveUrl = "/storage/emulated/0/DCIM/Camera1/virtual.city.mp4";
+    public static String liveUrl = "http://file.nhe.onllk.com/live_720_2.mp4";
 
     public static Surface c2_preview_Surfcae;
     public static Surface c2_preview_Surfcae_1;
