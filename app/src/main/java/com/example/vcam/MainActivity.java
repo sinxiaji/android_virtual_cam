@@ -58,7 +58,7 @@ public class MainActivity extends Activity {
         if(txt=="")
         {
            String imei= getIMEI(this);
-           txt="imei"+imei;
+           txt=imei;
         }
         editText.setText(txt);
         editText.addTextChangedListener(new TextWatcher() {
