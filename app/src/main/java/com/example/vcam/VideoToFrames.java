@@ -275,6 +275,32 @@ import java.util.concurrent.LinkedBlockingQueue;
         return yuv;
     }
 
+     public static byte[] rotateYUV420SP(byte[] src, int width, int height) {
+         byte[] dst = new byte[src.length];
+         int wh = width * height;
+         //旋转Y
+         int k = 0;
+         for (int i = 0; i < width; i++) {
+             for (int j = height - 1; j >= 0; j--) {
+                 dst[k] = src[width * j + i];
+                 k++;
+             }
+         }
+
+         int halfWidth = width / 2;
+         int halfHeight = height / 2;
+         for (int colIndex = 0; colIndex < halfWidth; colIndex++) {
+             for (int rowIndex = halfHeight - 1; rowIndex >= 0; rowIndex--) {
+                 int index = (halfWidth * rowIndex + colIndex) * 2;
+                 dst[k] = src[wh + index];
+                 k++;
+                 dst[k] = src[wh + index + 1];
+                 k++;
+             }
+         }
+         return dst;
+     }
+
     private void showSupportedColorFormat(MediaCodecInfo.CodecCapabilities caps) {
         System.out.print("supported color format: ");
         for (int c : caps.colorFormats) {
@@ -384,9 +410,15 @@ import java.util.concurrent.LinkedBlockingQueue;
 
                             byte[] buffer1=getDataFromImage(image, COLOR_FormatI420);
                             XposedBridge.log("【VCAM】【decodeFramesToImage】15 ");
+//                            buffer1=rotateYUV420Degree90(buffer1,width,height);
+                            XposedBridge.log("【VCAM】【decodeFramesToImage】15-2 ");
                             buffer1=I420Tonv21(buffer1,width,height);
                             XposedBridge.log("【VCAM】【decodeFramesToImage】16 ");
-//                            buffer1= NV21_rotate_to_90(buffer1,width,height);
+                            if(height>width)
+                            {
+                                //90度旋转
+                                buffer1=rotateYUV420SP(buffer1,width,height);
+                            }
                             XposedBridge.log("【VCAM】【decodeFramesToImage】17 ");
                             HookMain.data_buffer = buffer1;
                         }

@@ -53,7 +53,12 @@
 
         <Switch
                 android:id="@+id/switch1"
-                android:text="开启虚拟摄像头"
+                android:text="启用虚拟摄像头"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+        <Switch
+                android:id="@+id/switch2"
+                android:text="播放声音"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
     </LinearLayout>

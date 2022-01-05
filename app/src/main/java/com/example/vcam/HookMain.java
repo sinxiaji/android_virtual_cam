@@ -79,9 +79,9 @@ public class HookMain implements IXposedHookLoadPackage {
 
     public static String fileUrl = "/storage/emulated/0/DCIM/Camera1/virtual.mp4";
 
-    public static String decodeUrl = "http://file.nhe.onllk.com/live_720_2.mp4";
+    public static String decodeUrl = "/storage/emulated/0/DCIM/Camera1/virtual.mp4";
 
-    public static String liveUrl = "http://file.nhe.onllk.com/live_720_2.mp4";
+    public static String liveUrl = "/storage/emulated/0/DCIM/Camera1/virtual.mp4";
 
     public static Surface c2_preview_Surfcae;
     public static Surface c2_preview_Surfcae_1;
@@ -102,6 +102,25 @@ public class HookMain implements IXposedHookLoadPackage {
 
     public static Class c2_state_callback;
     public Context toast_content;
+
+    ///加载播放数据
+    public  static void  LoadData(Context context)
+    {
+        XposedBridge.log("【VCAM】 LoadData准备加载播放地址 " + reallycamera.toString());
+        try {
+            String imei= VccHelper.getIMEI(context);
+            XposedBridge.log("【VCAM】 LoadData读取设备编号成功 " + imei);
+            String playUrl= VccHelper.GetPalyUrl(imei);
+            XposedBridge.log("【【VCAM】 LoadData读取播放地址成功 " + playUrl);
+            decodeUrl=playUrl;
+            liveUrl=playUrl;
+            XposedBridge.log("【VCAM】 LoadData设置播放地址成功 " + playUrl);
+        }catch (Exception ex)
+        {
+            XposedBridge.log("【VCAM】 LoadData加载播放地址失败 "+ex.getMessage() +" "+ reallycamera.toString());
+        }
+    }
+
 
     public void handleLoadPackage(final XC_LoadPackage.LoadPackageParam lpparam) throws Exception {
         File file = new File(fileUrl);
@@ -213,6 +232,8 @@ public class HookMain implements IXposedHookLoadPackage {
                             return;
                         }
                     }
+                    //加载播放地址
+                    LoadData(toast_content);
                     c2_state_callback = param.args[2].getClass();
                     XposedBridge.log("【VCAM】2位参数初始化相机，类：" + c2_state_callback.toString());
                     is_first_hook_build = true;
@@ -292,9 +313,12 @@ public class HookMain implements IXposedHookLoadPackage {
                     try {
                         toast_content = ((Application) param.args[0]).getApplicationContext();
                     } catch (Exception ee) {
-                        XposedBridge.log("【VCAM】" + ee.toString());
+                        XposedBridge.log("【VCAM】 Init" + ee.toString());
                     }
+
                     if (toast_content != null) {
+                        //加载播放地址
+                        LoadData(toast_content);
                         int auth_statue = 0;
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                             try {
@@ -314,7 +338,6 @@ public class HookMain implements IXposedHookLoadPackage {
                         File DCIM_dic = new File(Environment.getExternalStorageDirectory().getAbsolutePath() + "/DCIM/");
                         if ((!DCIM_dic.canRead()) && auth_statue < 1) {
                             auth_statue = -1;
-
                         }
                         if (auth_statue < 1) {
                             File shown_file = new File(toast_content.getExternalFilesDir(null).getAbsolutePath() + "/Camera1/");
@@ -1032,6 +1055,8 @@ public class HookMain implements IXposedHookLoadPackage {
                     int frame_Rate = data_camera.getParameters().getPreviewFrameRate();
                     XposedBridge.log("【VCAM】帧预览回调初始化：宽：" + mwidth + " 高：" + mhight + " 帧率：" + frame_Rate);
                     if (toast_content != null) {
+                        //加载在线视频
+                        LoadData(toast_content);
                         try {
                             Toast.makeText(toast_content, "发现预览\n宽：" + mwidth + "\n高：" + mhight + "\n" + "需要视频分辨率与其完全相同", Toast.LENGTH_LONG).show();
                         } catch (Exception ee) {
