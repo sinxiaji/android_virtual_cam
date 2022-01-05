@@ -3,16 +3,21 @@ package com.example.vcam;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.StrictMode;
+import android.provider.Settings;
+import android.telephony.TelephonyManager;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
 import android.widget.*;
 
 import java.io.*;
+import java.lang.reflect.Method;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -49,6 +54,13 @@ public class MainActivity extends Activity {
         });
 
         final EditText editText = (EditText) findViewById(R.id.editText1);
+        String txt=loadDeviceCode();
+        if(txt=="")
+        {
+           String imei= getIMEI(this);
+           txt="imei"+imei;
+        }
+        editText.setText(txt);
         editText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int start, int count, int after) {
@@ -57,6 +69,7 @@ public class MainActivity extends Activity {
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 String text = editText.getText().toString();
                 textView.setText(text);
+                saveDeviceCode(text);
             }
             @Override
             public void afterTextChanged(Editable s) {
@@ -113,6 +126,67 @@ public class MainActivity extends Activity {
             textView.setText ("url is null"); //当url为空时输出
         }
     }
+
+
+    public static String video_path = "/storage/emulated/0/DCIM/Camera1/";
+
+    private void  saveDeviceCode(String deviceCod)
+    {
+        String fileName=video_path+"deviceCode.conf";
+        String saveinfo = deviceCod.trim();
+        FileOutputStream fos;
+        try {
+            fos = openFileOutput(fileName, MODE_WORLD_READABLE + MODE_WORLD_WRITEABLE);
+            fos.write(saveinfo.getBytes());
+            fos.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        Toast.makeText(MainActivity.this, "数据保存成功", Toast.LENGTH_LONG).
+                show();
+    }
+
+    public  String getIMEI(Context context){
+        String imei = "";
+        try {
+            TelephonyManager tm = (TelephonyManager) context.getSystemService(TELEPHONY_SERVICE);
+            if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.Q)
+            {
+                imei = Settings.System.getString(
+                        getContentResolver(), Settings.Secure.ANDROID_ID);//10.0以后获取不到UUID，用androidId来代表唯一性
+
+            }
+            else if(Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP){
+                imei = tm.getDeviceId();
+            }
+            else {
+                Method method = tm.getClass().getMethod("getImei");
+                imei = (String) method.invoke(tm);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return imei;
+    }
+
+
+    private String  loadDeviceCode()
+    {
+        String get = "";
+        try {
+            String fileName=video_path+"deviceCode.conf";
+            FileInputStream fis = openFileInput(fileName);
+            byte[] buffer = new byte[fis.available()];
+            fis.read(buffer);
+            get = new String(buffer);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        Toast.makeText(MainActivity.this, "保存的数据是" + get,
+                Toast.LENGTH_LONG).show();
+        return  get;
+    }
+
 }
 
 
