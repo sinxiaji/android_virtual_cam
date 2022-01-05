@@ -1,6 +1,6 @@
 <resources>
     <string name="app_name">VVC</string>
-    <string name="click_to_go_to_repo">前往仓库</string>
+    <string name="click_to_go_to_repo">打开后台</string>
     <string name="description">这个一个虚拟摄像头软件</string>
     <string name="Warning">请勿用于非法用途，所有后果自负!</string>
 </resources>
