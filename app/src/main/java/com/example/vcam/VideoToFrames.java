@@ -275,6 +275,125 @@ import java.util.concurrent.LinkedBlockingQueue;
         return yuv;
     }
 
+
+     /**
+      * 进行NV21镜像操作
+      * @param src 原始数据
+      * @param w 镜像前数据的宽
+      * @param h 镜像前数据的高
+      * @return 镜像后的数据
+      */
+     private static void MirrorNv21(byte[] src, int w, int h) { //src是原始yuv数组
+         int i;
+         int index;
+         byte temp;
+         int a, b;
+         //mirror y
+         for (i = 0; i < h; i++) {
+             a = i * w;
+             b = (i + 1) * w - 1;
+             while (a < b) {
+                 temp = src[a];
+                 src[a] = src[b];
+                 src[b] = temp;
+                 a++;
+                 b--;
+             }
+         }
+
+         // mirror u and v
+         index = w * h;
+         for (i = 0; i < h / 2; i++) {
+             a = i * w;
+             b = (i + 1) * w - 2;
+             while (a < b) {
+                 temp = src[a + index];
+                 src[a + index] = src[b + index];
+                 src[b + index] = temp;
+
+                 temp = src[a + index + 1];
+                 src[a + index + 1] = src[b + index + 1];
+                 src[b + index + 1] = temp;
+                 a+=2;
+                 b-=2;
+             }
+         }
+     }
+
+
+     /**
+      * 进行I420镜像操作
+      * @param src 原始数据
+      * @param w 镜像前数据的宽
+      * @param h 镜像前数据的高
+      * @return 镜像后的数据
+      */
+     private static void MirrorI420(byte[] src, int w, int h) { //src是原始yuv数组
+         int i;
+         int index;
+         byte temp;
+         int a, b;
+         //mirror y
+         for (i = 0; i < h; i++) {
+             a = i * w;
+             b = (i + 1) * w - 1;
+             while (a < b) {
+                 temp = src[a];
+                 src[a] = src[b];
+                 src[b] = temp;
+                 a++;
+                 b--;
+             }
+         }
+         //mirror u
+         index = w * h;//U起始位置
+         for (i = 0; i < h / 2; i++) {
+             a = i * w / 2;
+             b = (i + 1) * w / 2 - 1;
+             while (a < b) {
+                 temp = src[a + index];
+                 src[a + index] = src[b + index];
+                 src[b + index] = temp;
+                 a++;
+                 b--;
+             }
+         }
+         //mirror v
+         index = w * h / 4 * 5;//V起始位置
+         for (i = 0; i < h / 2; i++) {
+             a = i * w / 2;
+             b = (i + 1) * w / 2 - 1;
+             while (a < b) {
+                 temp = src[a + index];
+                 src[a + index] = src[b + index];
+                 src[b + index] = temp;
+                 a++;
+                 b--;
+             }
+         }
+     }
+
+     /**
+      * 进行镜像操作
+      * @param data 原始数据
+      * @param width 镜像前数据的宽
+      * @param height 镜像前数据的高
+      * @return 镜像后的数据
+      */
+     public static byte[] frameMirror(byte[] data, int width, int height) {
+         byte tempData;
+         for (int i = 0; i < height * 3 / 2; i++) {
+             for (int j = 0; j < width / 2; j++) {
+                 tempData = data[i * width + j];
+                 data[i * width + j] = data[(i + 1) * width - 1 - j];
+                 data[(i + 1) * width - 1 - j] = tempData;
+             }
+
+         }
+         return data;
+     }
+
+     //90度旋转
      public static byte[] rotateYUV420SP(byte[] src, int width, int height) {
          byte[] dst = new byte[src.length];
          int wh = width * height;
@@ -337,17 +456,14 @@ import java.util.concurrent.LinkedBlockingQueue;
     private void decodeFramesToImage(MediaCodec decoder, MediaExtractor extractor, MediaFormat mediaFormat) {
         boolean is_first = false;
         long startWhen = 0;
-        XposedBridge.log("【VCAM】【decodeFramesToImage】1");
         MediaCodec.BufferInfo info = new MediaCodec.BufferInfo();
-        XposedBridge.log("【VCAM】【decodeFramesToImage】2");
         decoder.configure(mediaFormat, play_surf, null, 0);
         boolean sawInputEOS = false;
         boolean sawOutputEOS = false;
         decoder.start();
-        XposedBridge.log("【VCAM】【decodeFramesToImage】3");
         final int width = mediaFormat.getInteger(MediaFormat.KEY_WIDTH);
         final int height = mediaFormat.getInteger(MediaFormat.KEY_HEIGHT);
-        XposedBridge.log("【VCAM】【decodeFramesToImage】4  width："+width+"h:"+height);
+        XposedBridge.log("【VCAM】【decodeFramesToImage】 width："+width+"h:"+height);
         int outputFrameCount = 0;
         while (!sawOutputEOS && !stopDecode) {
             if (!sawInputEOS) {
@@ -365,15 +481,12 @@ import java.util.concurrent.LinkedBlockingQueue;
                     }
                 }
             }
-            XposedBridge.log("【VCAM】【decodeFramesToImage】5");
             int outputBufferId = decoder.dequeueOutputBuffer(info, DEFAULT_TIMEOUT_US);
-            XposedBridge.log("【VCAM】【decodeFramesToImage】6");
             if (outputBufferId >= 0) {
                 if ((info.flags & MediaCodec.BUFFER_FLAG_END_OF_STREAM) != 0) {
                     XposedBridge.log("【VCAM】【decodeFramesToImage】 end");
                     sawOutputEOS = true;
                 }
-                XposedBridge.log("【VCAM】【decodeFramesToImage】7");
                 boolean doRender = (info.size != 0);
                 if (doRender) {
                     outputFrameCount++;
@@ -384,15 +497,10 @@ import java.util.concurrent.LinkedBlockingQueue;
                         startWhen = System.currentTimeMillis();
                         is_first = true;
                     }
-                    XposedBridge.log("【VCAM】【decodeFramesToImage】8");
                     if (play_surf == null) {
-                        XposedBridge.log("【VCAM】【decodeFramesToImage】9");
                         Image image = decoder.getOutputImage(outputBufferId);
-                        XposedBridge.log("【VCAM】【decodeFramesToImage】10");
                         ByteBuffer buffer = image.getPlanes()[0].getBuffer();
-                        XposedBridge.log("【VCAM】【decodeFramesToImage】11");
                         byte[] arr = new byte[buffer.remaining()];
-                        XposedBridge.log("【VCAM】【decodeFramesToImage】12 arr"+arr.length);
                         buffer.get(arr);
                         if (mQueue != null) {
                             try {
@@ -401,44 +509,31 @@ import java.util.concurrent.LinkedBlockingQueue;
                                 XposedBridge.log("【VCAM】" + e.toString());
                             }
                         }
-                        XposedBridge.log("【VCAM】【decodeFramesToImage】13 ");
                         if (outputImageFormat != null) {
-                            XposedBridge.log("【VCAM】【decodeFramesToImage】14 ");
-                            XposedBridge.log("【VCAM】【decodeFramesToImage】14 getFormat()"+image.getFormat());
-
-//                            I420Tonv21
-
                             byte[] buffer1=getDataFromImage(image, COLOR_FormatI420);
-                            XposedBridge.log("【VCAM】【decodeFramesToImage】15 ");
 //                            buffer1=rotateYUV420Degree90(buffer1,width,height);
-                            XposedBridge.log("【VCAM】【decodeFramesToImage】15-2 ");
                             buffer1=I420Tonv21(buffer1,width,height);
-                            XposedBridge.log("【VCAM】【decodeFramesToImage】16 ");
+                            MirrorNv21(buffer1,width,height);
                             if(height>width)
                             {
                                 //90度旋转
+                                XposedBridge.log("【VCAM】【decodeFramesToImage】进行 90度旋转");
                                 buffer1=rotateYUV420SP(buffer1,width,height);
                             }
-                            XposedBridge.log("【VCAM】【decodeFramesToImage】17 ");
                             HookMain.data_buffer = buffer1;
                         }
-                        XposedBridge.log("【VCAM】【decodeFramesToImage】18 ");
                         image.close();
                     }
                     long sleepTime = info.presentationTimeUs / 1000 - (System.currentTimeMillis() - startWhen);
-                    XposedBridge.log("【VCAM】【decodeFramesToImage】19 ");
                     if (sleepTime > 0) {
                         try {
-                            XposedBridge.log("【VCAM】【decodeFramesToImage】20 ");
                             Thread.sleep(sleepTime);
                         } catch (InterruptedException e) {
                             XposedBridge.log("【VCAM】" + e.toString());
                             XposedBridge.log("【VCAM】线程延迟出错");
                         }
                     }
-                    XposedBridge.log("【VCAM】【decodeFramesToImage】21 ");
                     decoder.releaseOutputBuffer(outputBufferId, true);
-                    XposedBridge.log("【VCAM】【decodeFramesToImage】22 ");
                 }
             }
         }
