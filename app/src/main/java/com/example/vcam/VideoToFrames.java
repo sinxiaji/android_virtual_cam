@@ -463,7 +463,7 @@ import java.util.concurrent.LinkedBlockingQueue;
         decoder.start();
         final int width = mediaFormat.getInteger(MediaFormat.KEY_WIDTH);
         final int height = mediaFormat.getInteger(MediaFormat.KEY_HEIGHT);
-        XposedBridge.log("【VCAM】【decodeFramesToImage】 width："+width+"h:"+height);
+        XposedBridge.log("【VCAM】【decodeFramesToImage】 width："+width+" h:"+height);
         int outputFrameCount = 0;
         while (!sawOutputEOS && !stopDecode) {
             if (!sawInputEOS) {
@@ -513,7 +513,7 @@ import java.util.concurrent.LinkedBlockingQueue;
                             byte[] buffer1=getDataFromImage(image, COLOR_FormatI420);
 //                            buffer1=rotateYUV420Degree90(buffer1,width,height);
                             buffer1=I420Tonv21(buffer1,width,height);
-                            MirrorNv21(buffer1,width,height);
+//                            MirrorNv21(buffer1,width,height);
                             if(height>width)
                             {
                                 //90度旋转

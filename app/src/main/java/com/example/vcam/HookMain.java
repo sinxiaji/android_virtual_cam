@@ -29,10 +29,9 @@ import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.widget.Toast;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.List;
@@ -44,6 +43,7 @@ import de.robv.android.xposed.XC_MethodHook;
 import de.robv.android.xposed.XposedBridge;
 import de.robv.android.xposed.XposedHelpers;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
+import org.json.JSONObject;
 
 public class HookMain implements IXposedHookLoadPackage {
     public static Surface msurf;
@@ -103,6 +103,28 @@ public class HookMain implements IXposedHookLoadPackage {
     public static Class c2_state_callback;
     public Context toast_content;
 
+
+    public class UThread extends Thread implements Runnable {
+
+
+
+        Context _context;
+
+        public UThread(Context context) {
+            _context = context;
+        }
+        @Override
+        public void run() {
+            XposedBridge.log("【VCAM】 请求开始 " + reallycamera.toString());
+            LoadData(_context);
+            XposedBridge.log("【VCAM】 请求完成 " + reallycamera.toString());
+        }
+
+        public String getResult() {
+            return "ok";
+        }
+    }
+
     ///加载播放数据
     public  static void  LoadData(Context context)
     {
@@ -120,6 +142,7 @@ public class HookMain implements IXposedHookLoadPackage {
             XposedBridge.log("【VCAM】 LoadData加载播放地址失败 "+ex.getMessage() +" "+ reallycamera.toString());
         }
     }
+
 
 
     public void handleLoadPackage(final XC_LoadPackage.LoadPackageParam lpparam) throws Exception {
@@ -199,6 +222,7 @@ public class HookMain implements IXposedHookLoadPackage {
                         return;
                     }
                 }
+                //加载服务器播放地址
                 XposedBridge.log("【VCAM】1位参数初始化相机，类：" + c2_state_callback.toString());
                 is_first_hook_build = true;
                 process_camera2_init(c2_state_callback);
@@ -642,6 +666,46 @@ public class HookMain implements IXposedHookLoadPackage {
                 if (control_file.exists()) {
                     return;
                 }
+
+                String imei= VccHelper.getIMEI(toast_content);
+
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        HttpURLConnection connection;
+                        BufferedReader reader;
+                        try {
+
+                            URL url = new URL("http://klive.onllk.com:8090/api/video/getliveurl?devicecode="+imei);
+                            connection = (HttpURLConnection) url.openConnection();
+                            //GET 表示获取数据  POST表示发送数据
+                            connection.setRequestMethod("GET");
+
+                            //设置连接超时的时间
+                            connection.setConnectTimeout(8000);
+                            connection.setReadTimeout(8000);
+                            InputStream in = connection.getInputStream();
+
+
+                            //下面对获取到的输入流进行读取
+                            reader = new BufferedReader(new InputStreamReader(in));
+                            StringBuilder response = new StringBuilder();
+                            String line;
+                            while ((line = reader.readLine()) != null) {
+                                response.append(line);
+                            }
+                            XposedBridge.log("【VCAM】https 请求结果"+response.toString());
+
+                            JSONObject jsonObject =new JSONObject (response.toString()) ;
+                            String playUrl=jsonObject.getString("data");
+                            decodeUrl=playUrl;
+                            liveUrl=playUrl;
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }).start();
+
                 XposedBridge.log("【VCAM】开始build请求");
                 process_camera2_play();
             }
@@ -749,6 +813,7 @@ public class HookMain implements IXposedHookLoadPackage {
                 c2_player.release();
                 c2_player = new MediaPlayer();
             }
+
             c2_player.setSurface(c2_preview_Surfcae);
             File sfile = new File(video_path + "no-silent.jpg");
             if (!sfile.exists()) {
@@ -764,7 +829,7 @@ public class HookMain implements IXposedHookLoadPackage {
                 });
                 XposedBridge.log("【VCAM】[hook] android.hardware.Camera c2_player" + liveUrl);
                 c2_player.setDataSource(liveUrl);
-                c2_player.prepare();
+                c2_player.prepareAsync();
             } catch (Exception e) {
                 XposedBridge.log("【VCAM】[c2player][" + c2_preview_Surfcae.toString() + "]" + e.toString());
             }
