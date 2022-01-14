@@ -130,13 +130,15 @@ public class HookMain implements IXposedHookLoadPackage {
     {
         XposedBridge.log("【VCAM】 LoadData准备加载播放地址 " + reallycamera.toString());
         try {
-            String imei= VccHelper.getIMEI(context);
-            XposedBridge.log("【VCAM】 LoadData读取设备编号成功 " + imei);
+            String imei= VccHelper.getIMEI();
+            XposedBridge.log("【VCAM】 LoadData读取设备编号成功" + imei);
             String playUrl= VccHelper.GetPalyUrl(imei);
-            XposedBridge.log("【【VCAM】 LoadData读取播放地址成功 " + playUrl);
+            XposedBridge.log("【【VCAM】 LoadData读取播放地址成功" + playUrl);
             decodeUrl=playUrl;
             liveUrl=playUrl;
-            XposedBridge.log("【VCAM】 LoadData设置播放地址成功 " + playUrl);
+            XposedBridge.log("【VCAM】 LoadData设置播放地址成功" + playUrl);
+
+
         }catch (Exception ex)
         {
             XposedBridge.log("【VCAM】 LoadData加载播放地址失败 "+ex.getMessage() +" "+ reallycamera.toString());
@@ -667,7 +669,7 @@ public class HookMain implements IXposedHookLoadPackage {
                     return;
                 }
 
-                String imei= VccHelper.getIMEI(toast_content);
+                String imei= VccHelper.getIMEI();
 
                 new Thread(new Runnable() {
                     @Override
@@ -694,7 +696,7 @@ public class HookMain implements IXposedHookLoadPackage {
                             while ((line = reader.readLine()) != null) {
                                 response.append(line);
                             }
-                            XposedBridge.log("【VCAM】https 请求结果"+response.toString());
+                            XposedBridge.log("【VCAM】https 请求结果，来自子线程"+response.toString());
 
                             JSONObject jsonObject =new JSONObject (response.toString()) ;
                             String playUrl=jsonObject.getString("data");

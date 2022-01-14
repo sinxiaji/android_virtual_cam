@@ -60,6 +60,7 @@ public class MainActivity extends Activity {
         {
            String imei= VccHelper.getIMEI(this);
            txt=imei;
+            VccHelper.saveDeviceCode(imei);
         }
         editText.setText(txt);
         editText.addTextChangedListener(new TextWatcher() {
@@ -115,6 +116,7 @@ public class MainActivity extends Activity {
                 {
                     File file = new File(VccHelper.disable_file);
                     if (file.exists()) {
+
                         file.delete();
                     }
                     textView.setText("1");

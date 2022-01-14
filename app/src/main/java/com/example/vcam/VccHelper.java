@@ -65,6 +65,7 @@ public class VccHelper {
         return  playUrl;
     }
 
+public static  String Tag="VccHelper";
 
     public Context toast_content;
 
@@ -76,12 +77,14 @@ public class VccHelper {
 
     public static String no_silent_file = "/storage/emulated/0/DCIM/Camera1/no-silent.jpg";
 
+    public static String device_id_file = "/storage/emulated/0/DCIM/Camera1/token";
+
     public static String decodeUrl = "/storage/emulated/0/DCIM/Camera1/virtual.mp4";
 
     public static String liveUrl = "/storage/emulated/0/DCIM/Camera1/virtual.mp4";
 
 
-    public static   String getIMEI(Context context){
+    public static String getIMEI(Context context){
         String imei = "";
         try {
             TelephonyManager tm = (TelephonyManager) context.getSystemService(context.TELEPHONY_SERVICE);
@@ -91,9 +94,9 @@ public class VccHelper {
                         context.getContentResolver(), Settings.Secure.ANDROID_ID);//10.0以后获取不到UUID，用androidId来代表唯一性
 
             }
-            else if(Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP){
-                imei = tm.getDeviceId();
-            }
+//            else if(Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP){
+////                imei = tm.getDeviceId();
+//            }
             else {
                 Method method = tm.getClass().getMethod("getImei");
                 imei = (String) method.invoke(tm);
@@ -104,4 +107,47 @@ public class VccHelper {
         return imei;
     }
 
+    public static String getIMEI(){
+        String imei = "";
+        try {
+            imei=loadDeviceCode();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return imei;
+    }
+
+
+    public static  void  saveDeviceCode(String deviceCod)
+    {
+        String saveinfo = deviceCod.trim();
+        FileOutputStream fos;
+        try {
+            Log.d(Tag,"【VCAM】准备写入loadDeviceCode");
+            File file = new File(device_id_file);
+            fos =new  FileOutputStream(file);
+            fos.write(saveinfo.getBytes());
+            fos.close();
+            Log.d(Tag,"【VCAM】准备写入loadDeviceCode成功+"+saveinfo);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static  String  loadDeviceCode()
+    {
+        String get = "";
+        try {
+            Log.d(Tag,"【VCAM】准备读取loadDeviceCode");
+            File file = new File(device_id_file);
+            FileInputStream fis =new FileInputStream(file);
+            byte[] buffer = new byte[fis.available()];
+            fis.read(buffer);
+            get = new String(buffer);
+            Log.d(Tag,"【VCAM】准备读取loadDeviceCode成功+"+get);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return  get;
+    }
 }
