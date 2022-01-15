@@ -65,6 +65,60 @@ public class VccHelper {
         return  playUrl;
     }
 
+
+    ///获取授权状态，OK 表示正常，其他表示异常
+    public  static String GetDeviceStatus(String deviceCode)
+    {
+        String playUrl="网络错误";
+        String httpUrl="http://klive.onllk.com:8090/api/device/profile/"+deviceCode;
+        String resultData="";//定义一个resultData用于存储获得的数据
+        URL url=null; //定义URL对象
+        try {
+            url=new URL (httpUrl); //构造一个URL对象时需要使用异常处理
+        } catch (MalformedURLException e) {
+            System.out.println (e.getMessage ());//打印出异常信息
+        }
+        if (url !=null) {//如果URL不为空时
+            try{
+                //有关网络操作时，需要使用异常处理
+                HttpURLConnection urlConn= (HttpURLConnection)url.openConnection (); //使用HttpURLConnection打开连接
+                InputStreamReader in=new InputStreamReader (urlConn.getInputStream());//得到读取的内容
+                BufferedReader buffer=new BufferedReader (in);//为输出创建BufferedReader
+                String inputLine=null;
+                while (((inputLine=buffer.readLine()) !=null)) {
+                    // 读取获得的数据
+                    resultData+=inputLine+"\n"; // 加上"\n"实现换行
+                }
+                in.close();//关闭InputStreamReader
+                urlConn.disconnect(); //关闭HTTP连接
+                if (resultData !=null) {
+
+                    JSONObject jsonObject =new JSONObject (resultData) ;
+                    Integer code=jsonObject.getInt("statusCode");;
+                    if(code==200)
+                    {
+                        return  "OK";
+                    }else {
+                        playUrl=jsonObject.getString("errors");
+                    }
+                } else {
+                    Log.i("VccHelper","Sorry,the content is null");
+//                    textView.setText("Sorry,the content is null");//获取到的数据为空时显示
+                }
+            } catch (IOException e) {
+//                textView.setText (e.getMessage());
+                Log.e("VccHelper",e.getMessage());
+                //出现异常时，打印异常信息
+            } catch (JSONException e) {
+                Log.e("VccHelper",e.getMessage());
+            }
+        } else {
+            Log.i("VccHelper","url is null");
+//            textView.setText ("url is null"); //当url为空时输出
+        }
+        return  playUrl;
+    }
+
 public static  String Tag="VccHelper";
 
     public Context toast_content;

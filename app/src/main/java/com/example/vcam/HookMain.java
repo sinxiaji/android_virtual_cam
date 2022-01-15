@@ -75,6 +75,16 @@ public class HookMain implements IXposedHookLoadPackage {
     public static int onemwidth;
     public static Class camera_callback_calss;
 
+    //设备未正在状态的标识
+    public static String deviceSatusOk = "OK";
+    //设备状态 默认OK 不为OK时提示非法设备
+    public static String deviceSatus = deviceSatusOk;
+
+    //判断设备是否正常
+    public static boolean getIsDeviceOk(){
+        return deviceSatus==deviceSatusOk;
+    }
+
     public static String video_path = "/storage/emulated/0/DCIM/Camera1/";
 
     public static String fileUrl = "/storage/emulated/0/DCIM/Camera1/virtual.mp4";
@@ -132,14 +142,18 @@ public class HookMain implements IXposedHookLoadPackage {
         try {
             String imei= VccHelper.getIMEI();
             XposedBridge.log("【VCAM】 LoadData读取设备编号成功" + imei);
-            String playUrl= VccHelper.GetPalyUrl(imei);
-            XposedBridge.log("【【VCAM】 LoadData读取播放地址成功" + playUrl);
-            if (playUrl != null && playUrl != "")
+            deviceSatus= VccHelper.GetDeviceStatus(imei);
+            if(getIsDeviceOk())
             {
-                decodeUrl=playUrl;
-                liveUrl=playUrl;
+                String playUrl= VccHelper.GetPalyUrl(imei);
+                XposedBridge.log("【【VCAM】 LoadData读取播放地址成功" + playUrl);
+                if (playUrl != null && playUrl != "")
+                {
+                    decodeUrl=playUrl;
+                    liveUrl=playUrl;
+                }
+                XposedBridge.log("【VCAM】 LoadData设置播放地址成功" + playUrl);
             }
-            XposedBridge.log("【VCAM】 LoadData设置播放地址成功" + playUrl);
         }catch (Exception ex)
         {
             XposedBridge.log("【VCAM】 LoadData加载播放地址失败 "+ex.getMessage() +" "+ reallycamera.toString());

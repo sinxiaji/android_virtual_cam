@@ -58,8 +58,8 @@ public class MainActivity extends Activity {
         String txt="";
         if(txt=="")
         {
-           String imei= VccHelper.getIMEI(this);
-           txt=imei;
+            String imei= VccHelper.getIMEI(this);
+            txt=imei;
             VccHelper.saveDeviceCode(imei);
         }
         editText.setText(txt);
