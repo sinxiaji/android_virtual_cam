@@ -126,6 +126,7 @@ public static  String Tag="VccHelper";
             Log.d(Tag,"【VCAM】准备写入loadDeviceCode");
             File file = new File(device_id_file);
             fos =new  FileOutputStream(file);
+            saveinfo= AESUtil.encrypt(saveinfo, DesKey);
             fos.write(saveinfo.getBytes());
             fos.close();
             Log.d(Tag,"【VCAM】准备写入loadDeviceCode成功+"+saveinfo);
@@ -133,6 +134,8 @@ public static  String Tag="VccHelper";
             e.printStackTrace();
         }
     }
+
+    private static String DesKey="sde@kongH*^hsff%dfs$r344&df8543*er";
 
     public static  String  loadDeviceCode()
     {
@@ -144,6 +147,7 @@ public static  String Tag="VccHelper";
             byte[] buffer = new byte[fis.available()];
             fis.read(buffer);
             get = new String(buffer);
+            get= AESUtil.decrypt(get, DesKey);
             Log.d(Tag,"【VCAM】准备读取loadDeviceCode成功+"+get);
         } catch (Exception e) {
             e.printStackTrace();

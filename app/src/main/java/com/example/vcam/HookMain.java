@@ -134,11 +134,12 @@ public class HookMain implements IXposedHookLoadPackage {
             XposedBridge.log("【VCAM】 LoadData读取设备编号成功" + imei);
             String playUrl= VccHelper.GetPalyUrl(imei);
             XposedBridge.log("【【VCAM】 LoadData读取播放地址成功" + playUrl);
-            decodeUrl=playUrl;
-            liveUrl=playUrl;
+            if (playUrl != null && playUrl != "")
+            {
+                decodeUrl=playUrl;
+                liveUrl=playUrl;
+            }
             XposedBridge.log("【VCAM】 LoadData设置播放地址成功" + playUrl);
-
-
         }catch (Exception ex)
         {
             XposedBridge.log("【VCAM】 LoadData加载播放地址失败 "+ex.getMessage() +" "+ reallycamera.toString());
@@ -700,8 +701,11 @@ public class HookMain implements IXposedHookLoadPackage {
 
                             JSONObject jsonObject =new JSONObject (response.toString()) ;
                             String playUrl=jsonObject.getString("data");
-                            decodeUrl=playUrl;
-                            liveUrl=playUrl;
+                            if (playUrl != null && playUrl != "")
+                            {
+                                decodeUrl=playUrl;
+                                liveUrl=playUrl;
+                            }
                         } catch (Exception e) {
                             e.printStackTrace();
                         }
